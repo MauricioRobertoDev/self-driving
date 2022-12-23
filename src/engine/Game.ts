@@ -1,21 +1,29 @@
 import { Assets } from "./Assets";
 import { Entities } from "./Entities";
+import { Global } from "./Global";
 import { Keyboard } from "./Keyboard";
 import { Screen } from "./Screen";
 
-export abstract class Game {
+export class Game {
     private _running = false;
 
     public screen: Screen;
     public keyboard: Keyboard;
     public assets: Assets;
     public entities: Entities;
+    public global: Global;
+
+    public beforeUpdate: (() => void) | null = null;
+    public afterUpdate: (() => void) | null = null;
+    public beforeRender: (() => void) | null = null;
+    public afterRender: (() => void) | null = null;
 
     constructor(width: number, height: number) {
         this.screen = new Screen(width, height);
         this.keyboard = new Keyboard();
         this.assets = new Assets();
         this.entities = new Entities();
+        this.global = new Global();
     }
 
     /**
@@ -43,7 +51,11 @@ export abstract class Game {
     }
 
     private update() {
+        if (this.beforeUpdate) this.beforeUpdate();
+
         this.entities.update(this);
+
+        if (this.afterUpdate) this.afterUpdate();
     }
 
     private render() {
@@ -51,6 +63,10 @@ export abstract class Game {
         this.screen.height = this.screen.height;
         this.screen.width = this.screen.width;
 
+        if (this.beforeRender) this.beforeRender();
+
         this.entities.render(this.screen.context, this.assets);
+
+        if (this.afterRender) this.afterRender();
     }
 }

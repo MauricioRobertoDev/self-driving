@@ -1,57 +1,42 @@
-import { Assets } from "../engine/Assets";
 import { Entity } from "../engine/Entity";
-import { Game } from "../engine/Game";
 import { Keyboard } from "../engine/Keyboard";
 import { Dot } from "../engine/Util";
 
-export class PlayerTest extends Entity {
-    public maxSpeed = 10;
-    public speed = 5;
+export abstract class AbstractCar extends Entity {
+    public maxSpeed;
+    public speed = 0;
     public angle = 0;
     public friction = 0.05;
-    public acceleration = 0.2;
+    public acceleration = 0.1;
     public damaged = false;
     public polygon: Dot[] = [];
-    // controls
+    // controles
     public forward = false;
     public reverse = false;
     public left = false;
     public right = false;
-
+    // dimenssões
     public width = 50;
     public height = 80;
 
-    constructor() {
-        super("t", 0, 0);
+    constructor(id: string, x: number, y: number, maxSpeed: number) {
+        super(id, x, y);
+        this.maxSpeed = maxSpeed;
     }
 
-    public update(game: Game): void {
-        this.updateControls(game.keyboard);
-        this.updatePosition();
+    /**
+     * PÚBLICO
+     */
+    public explode(): void {
+        this.damaged = true;
+        this.speed = 0;
+        // TODO: IDEIA -> sprite de explosão
     }
 
-    public render(ctx: CanvasRenderingContext2D, assets: Assets): void {
-        this.updatePolygon();
-
-        this.damaged ? (ctx.fillStyle = "gray") : (ctx.fillStyle = "blue");
-        ctx.beginPath();
-        ctx.moveTo(this.polygon[0].x, this.polygon[0].y);
-
-        for (let i = 1; i < this.polygon.length; i++) {
-            ctx.lineTo(this.polygon[i].x, this.polygon[i].y);
-        }
-
-        ctx.fill();
-    }
-
-    private updateControls(_keyboard: Keyboard) {
-        _keyboard.isDown("w") ? (this.forward = true) : (this.forward = false);
-        _keyboard.isDown("s") ? (this.reverse = true) : (this.reverse = false);
-        _keyboard.isDown("a") ? (this.left = true) : (this.left = false);
-        _keyboard.isDown("d") ? (this.right = true) : (this.right = false);
-    }
-
-    private updatePolygon(): void {
+    /**
+     * PROTEGIDO
+     */
+    protected updatePolygon(): void {
         this.polygon = [];
         const rad = Math.hypot(this.width, this.height) / 2;
         const alpha = Math.atan2(this.width, this.height);
@@ -73,7 +58,7 @@ export class PlayerTest extends Entity {
         });
     }
 
-    private updatePosition(): void {
+    protected updatePosition(): void {
         if (this.forward) {
             this.speed += this.acceleration;
             // TODO
@@ -98,4 +83,6 @@ export class PlayerTest extends Entity {
         this.position.x -= Math.sin(this.angle) * this.speed;
         this.position.y -= Math.cos(this.angle) * this.speed;
     }
+
+    protected abstract updateControls(keyboard: Keyboard): void;
 }

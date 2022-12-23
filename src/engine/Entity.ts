@@ -4,10 +4,9 @@ import { Vector } from "./Vector";
 
 export abstract class Entity {
     private _id: string;
-    public angle = 0;
     public position: Vector;
     public parent: Entity | null = null;
-    public children: Map<string, Entity> = new Map();
+    public children: Entity[] = [];
 
     constructor(id: string, x: number, y: number) {
         this._id = id;
@@ -27,25 +26,25 @@ export abstract class Entity {
     public addChild(...children: Entity[]) {
         children.forEach((child) => {
             child.parent = this;
-            this.children.set(child.id, child);
+            this.children.push(child);
         });
     }
 
     public getChild(id: string): Entity {
-        if (this.children.has(id)) {
-            return this.children.get(id) as Entity;
-        }
+        const child = this.children.find((child) => child.id == id);
+
+        if (child) return child;
 
         throw new Error(
             `A entidade ${id} não existe como filha da entidade '${this.id}'`,
         );
     }
 
-    public removeChild(child: Entity) {
-        if (child.parent === this) {
-            child.parent = null;
-        }
-        this.children.delete(child.id);
+    public removeChild(id: string): void {
+        const child = this.getChild(id);
+        const index = this.children.indexOf(child);
+
+        this.children.splice(index, 1);
     }
 
     // lógica

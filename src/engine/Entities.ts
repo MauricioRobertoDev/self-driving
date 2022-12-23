@@ -3,21 +3,21 @@ import { Entity } from "./Entity";
 import { Game } from "./Game";
 
 export class Entities {
-    private _entities: Map<string, Entity> = new Map();
+    private _entities: Entity[] = [];
 
     constructor() {}
 
     public add(entity: Entity): void {
-        this._entities.set(entity.id, entity);
+        this._entities.push(entity);
     }
 
     public get(id: string): Entity {
-        if (this._entities.has(id)) {
-            return this._entities.get(id) as Entity;
-        }
+        const entity = this._entities.find((child) => child.id == id);
+
+        if (entity) return entity;
 
         throw new Error(
-            `A entidade ${id} não existe como uma entidade pai, verefique se o id está correto`,
+            `A entidade ${id} não existe como uma entidade pai, verifique se o id está correto`,
         );
     }
 

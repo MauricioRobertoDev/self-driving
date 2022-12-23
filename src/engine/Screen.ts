@@ -49,6 +49,10 @@ export class Screen {
         this.canvas.style.backgroundColor = color;
     }
 
+    public fixCamera(x: number, y: number): void {
+        this.context.translate(x, y);
+    }
+
     /**
      * PRIVADO
      */
