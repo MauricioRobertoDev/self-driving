@@ -3,7 +3,7 @@ export class Screen {
     public context: CanvasRenderingContext2D;
 
     constructor(width: number, height: number, color: string = "#A4B0F0") {
-        this.canvas = this.getGameCanvas();
+        this.canvas = this._getGameCanvas();
         this.resize(width, height);
 
         this.canvas.style.position = "absolute";
@@ -52,7 +52,7 @@ export class Screen {
     /**
      * PRIVADO
      */
-    private getGameCanvas(): HTMLCanvasElement {
+    private _getGameCanvas(): HTMLCanvasElement {
         const elements = document.getElementsByTagName("canvas");
 
         for (let i = 0; i < elements.length; i++) {

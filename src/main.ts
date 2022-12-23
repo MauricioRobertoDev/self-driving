@@ -1,4 +1,5 @@
-import { Game } from "./engine/Game";
+import { MyGame } from "./game/MyGame";
 
-const gm = new Game(700, window.innerHeight);
+const gm = new MyGame(700, window.innerHeight);
+
 gm.start();
