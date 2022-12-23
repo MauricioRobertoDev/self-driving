@@ -1,3 +1,4 @@
+import { Assets } from "./Assets";
 import { Keyboard } from "./Keyboard";
 import { Screen } from "./Screen";
 
@@ -6,10 +7,12 @@ export abstract class Game {
 
     public screen: Screen;
     public keyboard: Keyboard;
+    public assets: Assets;
 
     constructor(width: number, height: number) {
         this.screen = new Screen(width, height);
         this.keyboard = new Keyboard();
+        this.assets = new Assets();
     }
 
     /**
