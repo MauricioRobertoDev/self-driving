@@ -7,10 +7,12 @@ export abstract class Entity {
     public position: Vector;
     public parent: Entity | null = null;
     public children: Entity[] = [];
+    public tag: string | undefined = undefined;
 
-    constructor(id: string, x: number, y: number) {
+    constructor(id: string, x: number, y: number, tag?: string) {
         this._id = id;
         this.position = new Vector(x, y);
+        this.tag = tag;
     }
 
     /**

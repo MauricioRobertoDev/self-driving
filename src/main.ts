@@ -23,4 +23,14 @@ gm.beforeRender = () => {
     gm.screen.fixCamera(0, -bestDriver.position.y + gm.screen.height * 0.8);
 };
 
+gm.afterUpdate = () => {
+    const currentChampion = gm.global.get("bestDriver");
+    const players = gm.entities.getAllByTag("player") as PlayerCar[];
+    const champion = players.reduce((prevPlayer, currentPlayer) => {
+        if (currentPlayer.score > prevPlayer.score) return currentPlayer;
+        return prevPlayer;
+    }, currentChampion);
+    gm.global.set("bestDriver", champion);
+};
+
 gm.start();

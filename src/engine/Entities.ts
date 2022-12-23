@@ -34,4 +34,8 @@ export class Entities {
             entity.renderChildren(ctx, assets);
         });
     }
+
+    public getAllByTag(tag: string): Entity[] {
+        return this._entities.filter((entity) => entity.tag == tag);
+    }
 }

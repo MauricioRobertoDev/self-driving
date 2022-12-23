@@ -45,14 +45,14 @@ export class Road extends Entity {
     }
 
     public render(ctx: CanvasRenderingContext2D, assets: Assets) {
-        ctx.lineWidth = 1;
-        ctx.strokeStyle = "red";
-        ctx.setLineDash([5]);
-
         const img = assets.getImage("race");
         const ptrn = ctx.createPattern(img, "repeat") as CanvasPattern;
         ctx.fillStyle = ptrn;
         ctx.fillRect(0, 100000, 700, -100000000);
+
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "red";
+        ctx.setLineDash([5]);
 
         for (let i = 0; i <= this.laneCount; i++) {
             const x = lerp(this.lanesLeft, this.lanesRight, i / this.laneCount);

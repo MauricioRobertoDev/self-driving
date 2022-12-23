@@ -7,7 +7,8 @@ import { Sensor } from "./Sensor";
 
 export class PlayerCar extends AbstractCar {
     public sensor: Sensor;
-    public isBest = false;
+    public score = 0;
+    public tag = "player";
 
     constructor(id: string, x: number, y: number, maxSpeed: number) {
         super(id, x, y, maxSpeed);
@@ -20,6 +21,7 @@ export class PlayerCar extends AbstractCar {
             this.updateControls(game.keyboard);
             this.updatePosition();
             this.updatePolygon();
+            this.updateScore(road);
             this.sensor.update(road.borders, road.getTraffic());
         }
     }
@@ -42,5 +44,20 @@ export class PlayerCar extends AbstractCar {
         _keyboard.isDown("s") ? (this.reverse = true) : (this.reverse = false);
         _keyboard.isDown("a") ? (this.left = true) : (this.left = false);
         _keyboard.isDown("d") ? (this.right = true) : (this.right = false);
+    }
+
+    private updateScore(road: Road) {
+        if (this.forward) {
+            this.score += 1;
+
+            if (this.angle >= Math.PI / 2 && this.angle <= Math.PI / 2)
+                this.score += 1;
+
+            const xOnLane2 = road.laneCenter(2);
+            const xOnLane3 = road.laneCenter(3);
+            const posX = this.position.x;
+
+            if (posX - xOnLane2 <= 10 || posX - xOnLane3 <= 10) this.score += 1;
+        }
     }
 }
