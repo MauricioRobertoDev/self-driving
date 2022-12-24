@@ -1,14 +1,14 @@
 import { Game } from "../engine/Game";
 import { Keyboard } from "../engine/Keyboard";
+import { Dot } from "../engine/Util";
 //
 import { AbstractCar } from "./AbstractCar";
-import { Road } from "./Road";
 import { Sensor } from "./Sensor";
+import { TrafficCar } from "./TrafficCar";
 
 export class PlayerCar extends AbstractCar {
     public sensor: Sensor;
     public score = 0;
-    public tag = "player";
 
     constructor(id: string, x: number, y: number, maxSpeed: number) {
         super(id, x, y, maxSpeed);
@@ -17,12 +17,13 @@ export class PlayerCar extends AbstractCar {
 
     public update(game: Game) {
         if (!this.damaged) {
-            const road = this.parent as Road;
+            const borders = game.global.get("roadBorders") as [Dot, Dot][];
+            const traffic = this.getTraffic(game);
+
             this.updateControls(game.keyboard);
             this.updatePosition();
             this.updatePolygon();
-            this.updateScore(road);
-            this.sensor.update(road.borders, road.getTraffic());
+            this.sensor.update(borders, traffic);
         }
     }
 
@@ -46,18 +47,9 @@ export class PlayerCar extends AbstractCar {
         _keyboard.isDown("d") ? (this.right = true) : (this.right = false);
     }
 
-    private updateScore(road: Road) {
-        if (this.forward) {
-            this.score += 1;
-
-            if (this.angle >= Math.PI / 2 && this.angle <= Math.PI / 2)
-                this.score += 1;
-
-            const xOnLane2 = road.laneCenter(2);
-            const xOnLane3 = road.laneCenter(3);
-            const posX = this.position.x;
-
-            if (posX - xOnLane2 <= 10 || posX - xOnLane3 <= 10) this.score += 1;
-        }
+    private getTraffic(game: Game): TrafficCar[] {
+        return game.entities
+            .all()
+            .filter((entity) => entity instanceof TrafficCar) as TrafficCar[];
     }
 }

@@ -1,7 +1,6 @@
 import { Assets } from "../engine/Assets";
 import { Entity } from "../engine/Entity";
-import { Game } from "../engine/Game";
-import { lerp, Dot, polysIntersect } from "../engine/Util";
+import { lerp, Dot } from "../engine/Util";
 //
 import { PlayerCar } from "./PlayerCar";
 import { TrafficCar } from "./TrafficCar";
@@ -13,6 +12,7 @@ export class Road extends Entity {
     private lanesRight: number;
     private top = -100000;
     private bottom = 100000;
+    private laneCount = 4;
     public borders: [Dot, Dot][] = [];
 
     constructor(
@@ -21,7 +21,6 @@ export class Road extends Entity {
         y: number,
         private width: number,
         private lanesWidth: number,
-        private laneCount: number = 3,
     ) {
         super(id, x, y);
         this.left = this.position.x - this.width / 2;
@@ -40,9 +39,7 @@ export class Road extends Entity {
         ];
     }
 
-    public update(_game: Game) {
-        this.checkCollisions();
-    }
+    public update() {}
 
     public render(ctx: CanvasRenderingContext2D, assets: Assets) {
         const img = assets.getImage("race");
@@ -99,24 +96,5 @@ export class Road extends Entity {
         });
 
         return players;
-    }
-
-    private checkCollisions(): void {
-        this.getPlayers().forEach((player) => {
-            // colisão com as bordas da pista
-            for (let i = 0; i < this.borders.length; i++) {
-                if (polysIntersect(player.polygon, this.borders[i]))
-                    player.explode();
-            }
-
-            // colisão com os carros
-            const traffic = this.getTraffic();
-            for (let i = 0; i < traffic.length; i++) {
-                const trafficCar = traffic[i] as TrafficCar;
-                if (polysIntersect(player.polygon, trafficCar.polygon)) {
-                    player.explode();
-                }
-            }
-        });
     }
 }

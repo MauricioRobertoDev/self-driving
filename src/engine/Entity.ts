@@ -1,25 +1,16 @@
 import { Assets } from "./Assets";
 import { Game } from "./Game";
-import { Vector } from "./Vector";
+import { Dot } from "./Util";
 
 export abstract class Entity {
-    private _id: string;
-    public position: Vector;
+    public readonly id: string;
+    public position: Dot;
     public parent: Entity | null = null;
     public children: Entity[] = [];
-    public tag: string | undefined = undefined;
 
-    constructor(id: string, x: number, y: number, tag?: string) {
-        this._id = id;
-        this.position = new Vector(x, y);
-        this.tag = tag;
-    }
-
-    /**
-     * GETTERS E SETTERS
-     */
-    public get id(): string {
-        return this._id;
+    constructor(id: string, x: number, y: number) {
+        this.id = id;
+        this.position = { x, y };
     }
 
     /**

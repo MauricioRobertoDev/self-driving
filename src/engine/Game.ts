@@ -13,6 +13,7 @@ export class Game {
     public entities: Entities;
     public global: Global;
 
+    public setup: (() => void) | null = null;
     public beforeUpdate: (() => void) | null = null;
     public afterUpdate: (() => void) | null = null;
     public beforeRender: (() => void) | null = null;
@@ -31,6 +32,7 @@ export class Game {
      */
     public start(): void {
         this._running = true;
+        if (this.setup) this.setup();
         this.loop();
     }
 

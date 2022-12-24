@@ -7,8 +7,8 @@ export class Entities {
 
     constructor() {}
 
-    public add(entity: Entity): void {
-        this._entities.push(entity);
+    public add(...entities: Entity[]): void {
+        entities.forEach((entity) => this._entities.push(entity));
     }
 
     public get(id: string): Entity {
@@ -19,6 +19,10 @@ export class Entities {
         throw new Error(
             `A entidade ${id} não existe como uma entidade pai, verifique se o id está correto`,
         );
+    }
+
+    public all(): Entity[] {
+        return this._entities;
     }
 
     public update(game: Game) {
@@ -33,9 +37,5 @@ export class Entities {
             entity.render(ctx, assets);
             entity.renderChildren(ctx, assets);
         });
-    }
-
-    public getAllByTag(tag: string): Entity[] {
-        return this._entities.filter((entity) => entity.tag == tag);
     }
 }
