@@ -1,10 +1,13 @@
+import { Visualizer } from "./ai/Visualizer";
 import { Game } from "./engine/Game";
 import { Dot, polysIntersect } from "./engine/Util";
+import { AIPlayerCar } from "./game/AIPlayerCar";
 import { PlayerCar } from "./game/PlayerCar";
 import { Road } from "./game/Road";
 import { TrafficCar } from "./game/TrafficCar";
 
 const gm = new Game(700, window.innerHeight);
+const nw = new Visualizer(300, window.innerHeight, 50, ["🠉", "🠈", "🠊", "🠋"]);
 
 gm.setup = () => {
     const road = new Road(
@@ -27,6 +30,8 @@ gm.setup = () => {
     const t4 = new TrafficCar("T_4", lanesCenter[3], 200, 4, 0);
 
     const p1 = new PlayerCar("P_1", lanesCenter[2], 100, 10);
+    // const p1 = new PlayerCar("P_1", lanesCenter[2], 100, 10);
+    const ai1 = new AIPlayerCar("AI_1", lanesCenter[2], 100, 10);
 
     gm.entities.add(road, p1, t1, t2, t3, t4);
 
@@ -34,6 +39,11 @@ gm.setup = () => {
     gm.global.set("roadBorders", road.borders); // [Dot, Dot][]
     gm.global.set("centerLane2", lanesCenter[2]); // number
     gm.global.set("centerLane3", lanesCenter[3]); // number
+
+    // if (p1 instanceof AIPlayerCar) {
+    nw.setNetwork(p1.brain);
+    nw.start();
+    // }
 };
 
 gm.afterUpdate = () => {
@@ -45,7 +55,11 @@ gm.afterUpdate = () => {
 
     checkCollisions(players, borders, traffic);
     updateScoreOfPlayers(players, laneX2, laneX3);
-    gm.global.set("bestDriver", getPlayerWithHighestScore(players));
+
+    const currentBestDriver = getPlayerWithHighestScore(players);
+    gm.global.set("bestDriver", currentBestDriver);
+
+    nw.setNetwork(currentBestDriver.brain);
 };
 
 gm.beforeRender = () => {
@@ -106,15 +120,20 @@ function updateScoreOfPlayers(
     lane3X: number,
 ) {
     players.forEach((player) => {
-        if (player.forward) {
+        if (!player.damaged && player.forward) {
             player.score += 1;
 
-            if (player.angle >= Math.PI / 2 && player.angle <= Math.PI / 2)
-                player.score += 1;
+            // if (player.angle >= Math.PI / 2 && player.angle <= Math.PI / 2)
+            //     player.score += 1;
 
             const posX = player.position.x;
 
-            if (posX - lane2X <= 10 || posX - lane3X <= 10) player.score += 1;
+            if (
+                Math.abs(posX - lane2X) <= 10 ||
+                Math.abs(posX - lane3X) <= 10
+            ) {
+                player.score += 1;
+            }
         }
     });
 }
