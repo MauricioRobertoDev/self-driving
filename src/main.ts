@@ -10,24 +10,46 @@ import { TrafficCar } from "./game/TrafficCar";
 const gm = new Game(700, window.innerHeight);
 const nw = new Visualizer(300, window.innerHeight, 50, ["🠉", "🠈", "🠊", "🠋"]);
 
+const amountAI = 500;
+const mutationPercentage = 0.5; // 0 - 1
+let generation = 0;
+
+const mutationElement = document.getElementById("mutation") as HTMLElement;
+const generationElement = document.getElementById("generation") as HTMLElement;
+const scoreElement = document.getElementById("score") as HTMLElement;
+const playerElement = document.getElementById("player") as HTMLElement;
+
 gm.setup = () => {
     setDefaultEntityAndVars();
     setEventsOnButtons();
 
-    const laneX2 = gm.global.get("centerLane2");
+    const aiCars = generateAiCars(amountAI, gm.global.get("centerLane2"));
 
-    // const p1 = new PlayerCar("P_1", laneX2, 100, 10);
-    const p1 = new PlayerCar("P_1", laneX2, 0, 10);
-
-    gm.entities.add(p1);
-
-    for (let i = 0; i < 100; i++) {
-        gm.entities.add(new AIPlayerCar(`AI_${i}`, laneX2, 0, 10));
+    if (generation > 0) {
+        const bestBrainStr = recoverBrain();
+        if (bestBrainStr) {
+            for (let i = 0; i < aiCars.length; i++) {
+                aiCars[i].brain = JSON.parse(bestBrainStr);
+                if (i != 0) {
+                    NeuralNetwork.mutate(aiCars[i].brain, mutationPercentage);
+                }
+            }
+            generation++;
+        }
     }
 
-    gm.global.set("bestDriver", p1);
+    gm.entities.add(...aiCars);
 
-    recoverBrain();
+    gm.global.set("bestDriver", aiCars[0]);
+
+    mutationElement.innerText = "Mutação: " + mutationPercentage * 100 + "%";
+    generationElement.innerText = "Geração: " + generation;
+    scoreElement.innerText = "Maior Score: " + Math.round(aiCars[0].score);
+    playerElement.innerText = "Atual: " + aiCars[0].id;
+
+    // const p1 = new PlayerCar("P_1", laneX2, 0, 10);
+    // gm.entities.add(p1);
+    // gm.global.set("bestDriver", p1);
 };
 
 gm.afterUpdate = () => {
@@ -44,6 +66,12 @@ gm.afterUpdate = () => {
     gm.global.set("bestDriver", currentBestDriver);
 
     nw.setNetwork(currentBestDriver.brain);
+
+    mutationElement.innerText = "Mutação: " + mutationPercentage * 100 + "%";
+    generationElement.innerText = "Geração: " + generation;
+    scoreElement.innerText =
+        "Maior Score: " + Math.round(currentBestDriver.score);
+    playerElement.innerText = "Player: " + currentBestDriver.id;
 };
 
 gm.beforeRender = () => {
@@ -53,6 +81,17 @@ gm.beforeRender = () => {
 
 gm.start();
 nw.start();
+
+/**
+ * GERA UM NÚMERO ESPECÍFICO DE AIPLAYERS
+ */
+function generateAiCars(amount: number, startLane: number): AIPlayerCar[] {
+    const ai_cars = [];
+    for (let i = 0; i < amount; i++) {
+        ai_cars.push(new AIPlayerCar(`AI_${i}`, startLane, 0, 10));
+    }
+    return ai_cars;
+}
 
 /**
  * RETORNA TODOS OS PLAYERS
@@ -117,25 +156,11 @@ function updateScoreOfPlayers(
     players: PlayerCar[],
     lane2X: number,
     lane3X: number,
-) {
+): void {
     players.forEach((player) => {
-        if (!player.damaged && player.forward && !player.reverse) {
-            player.score += 1;
-
-            // if (player.angle >= Math.PI / 2 && player.angle <= Math.PI / 2)
-            //     player.score += 1;
-
+        if (!player.damaged) {
             if (player.position.y < 0) {
-                player.score += Math.abs(player.position.y);
-            }
-
-            const posX = player.position.x;
-
-            if (
-                Math.abs(posX - lane2X) <= 10 ||
-                Math.abs(posX - lane3X) <= 10
-            ) {
-                player.score += 1;
+                player.score += Math.abs(player.position.y) / 100;
             }
         }
     });
@@ -181,33 +206,27 @@ function setEventsOnButtons(): void {
     if (seeBrainBtn) seeBrainBtn.onclick = seeBrain;
 }
 
-function saveBrain() {
+function saveBrain(): void {
     const bestDriver = gm.global.get("bestDriver") as PlayerCar;
     localStorage.setItem("bestBrain", JSON.stringify(bestDriver.brain));
     console.log("Cérebro salvo.");
 }
 
-function discartBrain() {
+function discartBrain(): void {
     localStorage.removeItem("bestBrain");
+    generation = 0;
     console.log("Cérebro deletado.");
 }
 
-function recoverBrain(): void {
+function recoverBrain(): string | void {
     if (localStorage.getItem("bestBrain")) {
-        const bestBrain = localStorage.getItem("bestBrain") as string;
-        const bestDriver = gm.global.get("bestDriver") as PlayerCar;
-
-        bestDriver.brain = Object.assign(
-            new NeuralNetwork([0, 0, 0]),
-            JSON.parse(bestBrain),
-        ) as NeuralNetwork;
         console.log("Cérebro recuperado.");
-        return;
+        return localStorage.getItem("bestBrain") as string;
     }
-    console.log("Sem cérebro para recuperar");
+    console.log("Sem cérebro para recuperar, criado um novo");
 }
 
-function seeBrain() {
+function seeBrain(): void {
     const bestBrain = localStorage.getItem("bestBrain");
     if (bestBrain) {
         console.table(bestBrain);

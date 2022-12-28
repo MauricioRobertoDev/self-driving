@@ -3,7 +3,7 @@ import { Level } from "./Level";
 
 export class NeuralNetwork {
     public levels: Level[];
-    public inputs: number[] = [];
+    private inputs: number[] = [];
 
     constructor(neuronCounts: number[]) {
         this.levels = [];
@@ -23,19 +23,19 @@ export class NeuralNetwork {
         return outputs;
     }
 
-    public setInputs(inputs: number[]): void {
-        this.inputs = inputs;
+    public static setInputs(network: NeuralNetwork, inputs: number[]): void {
+        network.inputs = inputs;
     }
 
-    public getOutputs(): number[] {
-        if (!this.inputs) {
+    public static getOutputs(network: NeuralNetwork): number[] {
+        if (!network.inputs) {
             throw new Error("Sem entradas registradas, use setInput primeiro.");
         }
-        const outputs = NeuralNetwork.feedForward(this, this.inputs);
+        const outputs = NeuralNetwork.feedForward(network, network.inputs);
         return outputs;
     }
 
-    static mutate(network: NeuralNetwork, amount = 1) {
+    public static mutate(network: NeuralNetwork, amount = 1) {
         network.levels.forEach((level) => {
             for (let i = 0; i < level.biases.length; i++) {
                 level.biases[i] = lerp(

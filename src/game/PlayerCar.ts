@@ -31,7 +31,7 @@ export class PlayerCar extends AbstractCar {
             const offsets = this.sensor.readings.map((s) =>
                 s == null ? 0 : 1 - s.offset,
             );
-            this.brain.setInputs(offsets);
+            NeuralNetwork.setInputs(this.brain, offsets);
             this.updateControls(game.keyboard);
         }
     }
@@ -54,7 +54,7 @@ export class PlayerCar extends AbstractCar {
     }
 
     protected updateControls(_keyboard: Keyboard) {
-        this.brain.getOutputs();
+        NeuralNetwork.getOutputs(this.brain);
         _keyboard.isDown("w") ? (this.forward = true) : (this.forward = false);
         _keyboard.isDown("s") ? (this.reverse = true) : (this.reverse = false);
         _keyboard.isDown("a") ? (this.left = true) : (this.left = false);

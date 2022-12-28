@@ -1,3 +1,4 @@
+import { NeuralNetwork } from "../ai/NeuralNetwork";
 import { Keyboard } from "../engine/Keyboard";
 //
 import { PlayerCar } from "./PlayerCar";
@@ -9,7 +10,7 @@ export class AIPlayerCar extends PlayerCar {
     }
 
     protected updateControls(_keyboard: Keyboard) {
-        const outputs = this.brain.getOutputs();
+        const outputs = NeuralNetwork.getOutputs(this.brain);
 
         this.forward = outputs[0] ? true : false;
         this.left = outputs[1] ? true : false;

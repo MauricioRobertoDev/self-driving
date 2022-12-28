@@ -44,7 +44,6 @@ export class Level {
                 : (level.outputs[i] = 0);
         }
 
-        // console.log(level.outputs);
         return level.outputs;
     }
 }
