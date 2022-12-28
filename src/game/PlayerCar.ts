@@ -37,7 +37,11 @@ export class PlayerCar extends AbstractCar {
     }
 
     public render(ctx: CanvasRenderingContext2D) {
-        if (this.iamBest) this.sensor.draw(ctx);
+        ctx.globalAlpha = 0.2;
+        if (this.iamBest) {
+            ctx.globalAlpha = 1;
+            this.sensor.draw(ctx);
+        }
         this.damaged ? (ctx.fillStyle = "gray") : (ctx.fillStyle = "blue");
         ctx.beginPath();
         ctx.moveTo(this.polygon[0].x, this.polygon[0].y);
@@ -64,7 +68,7 @@ export class PlayerCar extends AbstractCar {
     }
 
     protected checkIfIsBest(game: Game) {
-        game.global.get("bestDriver").id == this.id
+        game.global.get("bestDriver").id === this.id
             ? (this.iamBest = true)
             : (this.iamBest = false);
     }

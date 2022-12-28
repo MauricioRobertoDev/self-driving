@@ -10,6 +10,7 @@ export class Screen {
         this.canvas.style.left = "0";
         this.canvas.style.top = "0";
         this.canvas.style.backgroundColor = color;
+        this.canvas.style.zIndex = "1";
 
         this.context = this.canvas.getContext("2d") as CanvasRenderingContext2D;
     }

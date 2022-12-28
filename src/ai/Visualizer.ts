@@ -51,9 +51,7 @@ export class Visualizer {
     }
 
     public start() {
-        if (this.network) {
-            this.loop();
-        }
+        this.loop();
     }
 
     public drawNetwork() {
