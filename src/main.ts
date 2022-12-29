@@ -5,25 +5,59 @@ import { Dot, polysIntersect } from "./engine/Util";
 import { AIPlayerCar } from "./game/AIPlayerCar";
 import { PlayerCar } from "./game/PlayerCar";
 import { Road } from "./game/Road";
+import { ScoreBoard } from "./game/ScoreBoard";
 import { TrafficCar } from "./game/TrafficCar";
 
 const gm = new Game(700, window.innerHeight);
-const nw = new Visualizer(300, window.innerHeight, 50, ["🠉", "🠈", "🠊", "🠋"]);
+const visu = new Visualizer(300, window.innerHeight, 50, ["🠉", "🠈", "🠊", "🠋"]);
+const board = new ScoreBoard();
 
 const amountAI = 500;
-const mutationPercentage = 0.5; // 0 - 1
+const mutationPercentage = 0.2; // 0 - 1
 let generation = 0;
-
-const mutationElement = document.getElementById("mutation") as HTMLElement;
-const generationElement = document.getElementById("generation") as HTMLElement;
-const scoreElement = document.getElementById("score") as HTMLElement;
-const playerElement = document.getElementById("player") as HTMLElement;
+const playerMaxSpeed = 7;
+const trafficMaxSpeed = 4;
 
 gm.setup = () => {
-    setDefaultEntityAndVars();
     setEventsOnButtons();
+    buildRoad();
+    buildDefaultTraffic();
+    buildAiCars();
+    setInterval(resetGeneration, 1000 * 30);
+};
 
-    const aiCars = generateAiCars(amountAI, gm.global.get("centerLane2"));
+gm.afterUpdate = (time) => {
+    const players = getAllPlayers();
+    const traffic = getALlTraffic();
+
+    checkCollisions(players, gm.global.get("roadBorders"), traffic);
+    updateScoreOfPlayers(players);
+
+    const currentBestDriver = getPlayerWithHighestScore(players);
+    gm.global.set("bestDriver", currentBestDriver);
+
+    visu.drawNetwork(currentBestDriver.brain, time);
+
+    board.update(mutationPercentage, generation, currentBestDriver);
+};
+
+gm.beforeRender = () => {
+    const bestDriver = gm.global.get("bestDriver") as PlayerCar;
+    gm.screen.fixCamera(0, -bestDriver.position.y + gm.screen.height * 0.8);
+};
+
+gm.start();
+
+/**
+ * CONSTROEM E ADICIOAM ÀS ENTIDADES AO JOGO
+ */
+function buildAiCars(): void {
+    const lane3 = gm.global.get("centerLane3");
+    const aiCars = [];
+
+    for (let i = 0; i < amountAI; i++) {
+        aiCars.push(new AIPlayerCar(`AI_${i}`, lane3, 0, playerMaxSpeed));
+    }
 
     if (generation > 0) {
         const bestBrainStr = recoverBrain();
@@ -39,62 +73,47 @@ gm.setup = () => {
     }
 
     gm.entities.add(...aiCars);
-
     gm.global.set("bestDriver", aiCars[0]);
+}
 
-    mutationElement.innerText = "Mutação: " + mutationPercentage * 100 + "%";
-    generationElement.innerText = "Geração: " + generation;
-    scoreElement.innerText = "Maior Score: " + Math.round(aiCars[0].score);
-    playerElement.innerText = "Atual: " + aiCars[0].id;
+function buildRoad(): void {
+    const road = new Road(
+        "ROAD",
+        gm.screen.width / 2,
+        0,
+        gm.screen.width * 0.68,
+        gm.screen.width * 0.6,
+    );
 
-    // const p1 = new PlayerCar("P_1", laneX2, 0, 10);
-    // gm.entities.add(p1);
-    // gm.global.set("bestDriver", p1);
-};
+    gm.global.set("roadBorders", road.borders); // [Dot, Dot][]
+    gm.global.set("centerLane1", road.laneCenter(0)); // number
+    gm.global.set("centerLane2", road.laneCenter(1)); // number
+    gm.global.set("centerLane3", road.laneCenter(2)); // number
+    gm.global.set("centerLane4", road.laneCenter(3)); // number
 
-gm.afterUpdate = () => {
-    const players = getAllPlayers();
-    const traffic = getALlTraffic();
-    const borders = gm.global.get("roadBorders");
-    const laneX2 = gm.global.get("centerLane2");
-    const laneX3 = gm.global.get("centerLane3");
+    gm.entities.add(road);
+}
 
-    checkCollisions(players, borders, traffic);
-    updateScoreOfPlayers(players, laneX2, laneX3);
+function buildDefaultTraffic(): void {
+    const trafficCars = [];
 
-    const currentBestDriver = getPlayerWithHighestScore(players);
-    gm.global.set("bestDriver", currentBestDriver);
+    const lane1 = gm.global.get("centerLane1");
+    const lane2 = gm.global.get("centerLane2");
+    const lane3 = gm.global.get("centerLane3");
+    const lane4 = gm.global.get("centerLane4");
 
-    nw.setNetwork(currentBestDriver.brain);
+    trafficCars.push(
+        new TrafficCar("T_1", lane1, 0, trafficMaxSpeed, Math.PI),
+        new TrafficCar("T_2", lane2, -200, trafficMaxSpeed, Math.PI),
+        new TrafficCar("T_3", lane3, -300, trafficMaxSpeed, 0),
+        new TrafficCar("T_4", lane4, 100, trafficMaxSpeed, 0),
+    );
 
-    mutationElement.innerText = "Mutação: " + mutationPercentage * 100 + "%";
-    generationElement.innerText = "Geração: " + generation;
-    scoreElement.innerText =
-        "Maior Score: " + Math.round(currentBestDriver.score);
-    playerElement.innerText = "Player: " + currentBestDriver.id;
-};
-
-gm.beforeRender = () => {
-    const bestDriver = gm.global.get("bestDriver") as PlayerCar;
-    gm.screen.fixCamera(0, -bestDriver.position.y + gm.screen.height * 0.8);
-};
-
-gm.start();
-nw.start();
-
-/**
- * GERA UM NÚMERO ESPECÍFICO DE AIPLAYERS
- */
-function generateAiCars(amount: number, startLane: number): AIPlayerCar[] {
-    const ai_cars = [];
-    for (let i = 0; i < amount; i++) {
-        ai_cars.push(new AIPlayerCar(`AI_${i}`, startLane, 0, 10));
-    }
-    return ai_cars;
+    gm.entities.add(...trafficCars);
 }
 
 /**
- * RETORNA TODOS OS PLAYERS
+ * RETORNAM ENTIDADES ESPECÍFICAS
  */
 function getAllPlayers(): PlayerCar[] {
     return gm.entities
@@ -102,9 +121,6 @@ function getAllPlayers(): PlayerCar[] {
         .filter((entity) => entity instanceof PlayerCar) as PlayerCar[];
 }
 
-/**
- * RETORNA TODO O TRÁFEGO
- */
 function getALlTraffic(): TrafficCar[] {
     return gm.entities
         .all()
@@ -112,8 +128,18 @@ function getALlTraffic(): TrafficCar[] {
 }
 
 /**
- * RETORNA O PLAYER COM MAIOR PONTUAÇÃO
+ * ATUALIZAM O SCORE DO PLAYER E PEGAM O MAIOR
  */
+function updateScoreOfPlayers(players: PlayerCar[]): void {
+    players.forEach((player) => {
+        if (!player.damaged) {
+            if (player.position.y < 0) {
+                player.score += Math.abs(player.position.y) / 100;
+            }
+        }
+    });
+}
+
 function getPlayerWithHighestScore(players: PlayerCar[]): PlayerCar {
     const currentChampion = gm.global.get("bestDriver");
 
@@ -150,47 +176,15 @@ function checkCollisions(
 }
 
 /**
- * FUNÇÃO QUE DA PONTOS AOS PLAYER ASSIM PODE SE SELECIONAR COMO DEVE SER O MELHOR INDIVÍDUO
+ * FUNÇÃO QUE RESETA A ATUAL GERAÇÃO CRIANDO A PRÓXIMA COM O MELHOR DA CÉREBRO DA ATUAL
  */
-function updateScoreOfPlayers(
-    players: PlayerCar[],
-    lane2X: number,
-    lane3X: number,
-): void {
-    players.forEach((player) => {
-        if (!player.damaged) {
-            if (player.position.y < 0) {
-                player.score += Math.abs(player.position.y) / 100;
-            }
-        }
-    });
-}
-
-function setDefaultEntityAndVars(): void {
-    const road = new Road(
-        "ROAD",
-        gm.screen.width / 2,
-        0,
-        gm.screen.width * 0.68,
-        gm.screen.width * 0.6,
-    );
-    const lanesCenter = [
-        road.laneCenter(0),
-        road.laneCenter(1),
-        road.laneCenter(2),
-        road.laneCenter(3),
-    ];
-
-    const t1 = new TrafficCar("T_1", lanesCenter[0], 0, 4, Math.PI);
-    const t2 = new TrafficCar("T_2", lanesCenter[1], -200, 4, Math.PI);
-    const t3 = new TrafficCar("T_3", lanesCenter[2], -300, 4, 0);
-    const t4 = new TrafficCar("T_4", lanesCenter[3], 100, 4, 0);
-
-    gm.global.set("roadBorders", road.borders); // [Dot, Dot][]
-    gm.global.set("centerLane2", lanesCenter[2]); // number
-    gm.global.set("centerLane3", lanesCenter[3]); // number
-
-    gm.entities.add(road, t1, t2, t3, t4);
+function resetGeneration(): void {
+    saveBrain();
+    gm.entities.removeAll();
+    buildRoad();
+    buildDefaultTraffic();
+    buildAiCars();
+    generation++;
 }
 
 /**
@@ -200,13 +194,16 @@ function setEventsOnButtons(): void {
     const saveBrainBtn = document.getElementById("saveBrainBtn");
     const discartBrainBtn = document.getElementById("discartBrainBtn");
     const seeBrainBtn = document.getElementById("seeBrainBtn");
+    const resetGameBtn = document.getElementById("resetGameBtn");
 
     if (saveBrainBtn) saveBrainBtn.onclick = saveBrain;
     if (discartBrainBtn) discartBrainBtn.onclick = discartBrain;
     if (seeBrainBtn) seeBrainBtn.onclick = seeBrain;
+    if (resetGameBtn) resetGameBtn.onclick = resetGame;
 }
 
 function saveBrain(): void {
+    discartBrain();
     const bestDriver = gm.global.get("bestDriver") as PlayerCar;
     localStorage.setItem("bestBrain", JSON.stringify(bestDriver.brain));
     console.log("Cérebro salvo.");
@@ -214,7 +211,6 @@ function saveBrain(): void {
 
 function discartBrain(): void {
     localStorage.removeItem("bestBrain");
-    generation = 0;
     console.log("Cérebro deletado.");
 }
 
@@ -233,5 +229,14 @@ function seeBrain(): void {
         console.log("Cérebro mostrado.");
         return;
     }
-    console.log("Sem cérebro salvo");
+    console.log("Sem cérebro salvo para ver");
+}
+
+function resetGame(): void {
+    discartBrain();
+    gm.entities.removeAll();
+    buildRoad();
+    buildDefaultTraffic();
+    buildAiCars();
+    generation = 0;
 }

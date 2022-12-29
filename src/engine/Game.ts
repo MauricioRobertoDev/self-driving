@@ -14,8 +14,8 @@ export class Game {
     public global: Global;
 
     public setup: (() => void) | null = null;
-    public beforeUpdate: (() => void) | null = null;
-    public afterUpdate: (() => void) | null = null;
+    public beforeUpdate: ((time: number) => void) | null = null;
+    public afterUpdate: ((time: number) => void) | null = null;
     public beforeRender: (() => void) | null = null;
     public afterRender: (() => void) | null = null;
 
@@ -43,8 +43,8 @@ export class Game {
     /**
      * PRIVADO
      */
-    private loop(): void {
-        this.update();
+    private loop(time: number = 0): void {
+        this.update(time);
         this.render();
 
         if (this._running) {
@@ -52,12 +52,12 @@ export class Game {
         }
     }
 
-    private update() {
-        if (this.beforeUpdate) this.beforeUpdate();
+    private update(time: number) {
+        if (this.beforeUpdate) this.beforeUpdate(time);
 
         this.entities.update(this);
 
-        if (this.afterUpdate) this.afterUpdate();
+        if (this.afterUpdate) this.afterUpdate(time);
     }
 
     private render() {

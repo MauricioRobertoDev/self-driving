@@ -35,48 +35,33 @@ export class Visualizer {
         this.symbols = symbols;
     }
 
-    private loop(time: number = 0): void {
+    public drawNetwork(network: NeuralNetwork, time: number) {
+        this.network = network;
         this.screen.clear();
         this.screen.height = this.screen.height;
         this.screen.width = this.screen.width;
         this.screen.context.lineDashOffset = -time / 50;
-        this.drawNetwork();
 
-        requestAnimationFrame(this.loop.bind(this));
-    }
-
-    public setNetwork(network: NeuralNetwork): Visualizer {
-        this.network = network;
-        return this;
-    }
-
-    public start() {
-        this.loop();
-    }
-
-    public drawNetwork() {
-        if (this.network) {
-            const levelHeight = this.height / this.network.levels.length;
-            for (let i = this.network.levels.length - 1; i >= 0; i--) {
-                const levelTop =
-                    this.top +
-                    lerp(
-                        this.height - levelHeight,
-                        0,
-                        this.network.levels.length == 1
-                            ? 0.5
-                            : i / (this.network.levels.length - 1),
-                    );
-                this.screen.context.setLineDash([7, 3]);
-                this.drawLevel(
-                    this.network.levels[i],
-                    levelTop,
-                    this.left,
-                    this.width,
-                    levelHeight,
-                    i == this.network.levels.length - 1,
+        const levelHeight = this.height / this.network.levels.length;
+        for (let i = this.network.levels.length - 1; i >= 0; i--) {
+            const levelTop =
+                this.top +
+                lerp(
+                    this.height - levelHeight,
+                    0,
+                    this.network.levels.length == 1
+                        ? 0.5
+                        : i / (this.network.levels.length - 1),
                 );
-            }
+            this.screen.context.setLineDash([7, 3]);
+            this.drawLevel(
+                this.network.levels[i],
+                levelTop,
+                this.left,
+                this.width,
+                levelHeight,
+                i == this.network.levels.length - 1,
+            );
         }
     }
 
