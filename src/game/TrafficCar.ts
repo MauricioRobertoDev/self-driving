@@ -13,14 +13,13 @@ export class TrafficCar extends AbstractCar {
     ) {
         super(id, x, y, maxSpeed);
         this.angle = angle;
+        this.updatePolygon();
     }
 
     public update(game: Game) {
-        if (!this.damaged) {
-            this.updateControls(game.keyboard);
-            this.updatePosition();
-            this.updatePolygon();
-        }
+        this.updateControls(game.keyboard);
+        this.updatePosition();
+        this.updatePolygon();
     }
 
     /**

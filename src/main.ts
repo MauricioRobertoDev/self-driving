@@ -12,18 +12,19 @@ const gm = new Game(700, window.innerHeight);
 const visu = new Visualizer(300, window.innerHeight, 50, ["🠉", "🠈", "🠊", "🠋"]);
 const board = new ScoreBoard();
 
-const amountAI = 500;
-const mutationPercentage = 0.2; // 0 - 1
+const amountAI = 600;
+const mutationPercentage = 0.3; // 0 - 1
 let generation = 0;
 const playerMaxSpeed = 7;
-const trafficMaxSpeed = 4;
+const trafficMaxSpeed = 3;
+const humanPlayer = false;
 
 gm.setup = () => {
     setEventsOnButtons();
     buildRoad();
     buildDefaultTraffic();
-    buildAiCars();
-    setInterval(resetGeneration, 1000 * 30);
+    buildPlayers();
+    // setInterval(resetGeneration, 1000 * 30);
 };
 
 gm.afterUpdate = (time) => {
@@ -39,6 +40,10 @@ gm.afterUpdate = (time) => {
     visu.drawNetwork(currentBestDriver.brain, time);
 
     board.update(mutationPercentage, generation, currentBestDriver);
+
+    if (currentBestDriver.position.y < -10000) {
+        nextGame();
+    }
 };
 
 gm.beforeRender = () => {
@@ -95,21 +100,62 @@ function buildRoad(): void {
 }
 
 function buildDefaultTraffic(): void {
-    const trafficCars = [];
-
     const lane1 = gm.global.get("centerLane1");
     const lane2 = gm.global.get("centerLane2");
     const lane3 = gm.global.get("centerLane3");
     const lane4 = gm.global.get("centerLane4");
 
-    trafficCars.push(
-        new TrafficCar("T_1", lane1, 0, trafficMaxSpeed, Math.PI),
-        new TrafficCar("T_2", lane2, -200, trafficMaxSpeed, Math.PI),
-        new TrafficCar("T_3", lane3, -300, trafficMaxSpeed, 0),
-        new TrafficCar("T_4", lane4, 100, trafficMaxSpeed, 0),
-    );
+    gm.entities.add(
+        new TrafficCar("T_??", lane1, 0, trafficMaxSpeed, 0),
+        new TrafficCar("T_??", lane4, 0, trafficMaxSpeed, 0),
 
-    gm.entities.add(...trafficCars);
+        new TrafficCar("T_??", lane2, -400, trafficMaxSpeed, 0),
+
+        new TrafficCar("T_??", lane3, -800, trafficMaxSpeed, 0),
+        new TrafficCar("T_??", lane1, -800, trafficMaxSpeed, 0),
+
+        new TrafficCar("T_??", lane1, -1200, trafficMaxSpeed, 0),
+
+        new TrafficCar("T_??", lane2, -1600, trafficMaxSpeed, 0),
+        new TrafficCar("T_??", lane4, -1600, trafficMaxSpeed, 0),
+
+        new TrafficCar("T_??", lane2, -2000, trafficMaxSpeed, 0),
+        new TrafficCar("T_??", lane4, -2000, trafficMaxSpeed, 0),
+
+        new TrafficCar("T_??", lane1, -2400, trafficMaxSpeed, 0),
+
+        new TrafficCar("T_??", lane1, -2800, trafficMaxSpeed, 0),
+        new TrafficCar("T_??", lane4, -2800, trafficMaxSpeed, 0),
+
+        new TrafficCar("T_??", lane2, -3200, trafficMaxSpeed, 0),
+        new TrafficCar("T_??", lane1, -3200, trafficMaxSpeed, 0),
+
+        new TrafficCar("T_??", lane1, -3600, trafficMaxSpeed, 0),
+        new TrafficCar("T_??", lane3, -3600, trafficMaxSpeed, 0),
+
+        new TrafficCar("T_??", lane1, -4000, trafficMaxSpeed, 0),
+
+        new TrafficCar("T_??", lane1, -4400, trafficMaxSpeed, 0),
+        new TrafficCar("T_??", lane2, -4400, trafficMaxSpeed, 0),
+
+        new TrafficCar("T_??", lane3, -4800, trafficMaxSpeed, 0),
+        new TrafficCar("T_??", lane4, -4800, trafficMaxSpeed, 0),
+
+        new TrafficCar("T_??", lane1, -5200, trafficMaxSpeed, 0),
+        new TrafficCar("T_??", lane2, -5200, trafficMaxSpeed, 0),
+
+        new TrafficCar("T_??", lane4, -5600, trafficMaxSpeed, 0),
+    );
+}
+
+function buildHumanCar() {
+    const humanPlayer = new PlayerCar("HUMAN", 350, 0, playerMaxSpeed);
+    gm.entities.add(humanPlayer);
+    gm.global.set("bestDriver", humanPlayer);
+}
+
+function buildPlayers(): void {
+    humanPlayer ? buildHumanCar() : buildAiCars();
 }
 
 /**
@@ -134,7 +180,13 @@ function updateScoreOfPlayers(players: PlayerCar[]): void {
     players.forEach((player) => {
         if (!player.damaged) {
             if (player.position.y < 0) {
-                player.score += Math.abs(player.position.y) / 100;
+                player.score = Math.abs(player.position.y);
+            }
+            if (player.left && player.right) {
+                player.score -= 50;
+            }
+            if (player.forward && player.reverse) {
+                player.score -= 50;
             }
         }
     });
@@ -176,18 +228,6 @@ function checkCollisions(
 }
 
 /**
- * FUNÇÃO QUE RESETA A ATUAL GERAÇÃO CRIANDO A PRÓXIMA COM O MELHOR DA CÉREBRO DA ATUAL
- */
-function resetGeneration(): void {
-    saveBrain();
-    gm.entities.removeAll();
-    buildRoad();
-    buildDefaultTraffic();
-    buildAiCars();
-    generation++;
-}
-
-/**
  * FUNÇÕES PARA ADICIONAR EVENTOS AOS BOTÕES, SALVAMENTO, DESCARTE, RECUPERAÇÃO E VISUALIZAÇÃO DO MELHOR CÉREBRO
  */
 function setEventsOnButtons(): void {
@@ -195,11 +235,13 @@ function setEventsOnButtons(): void {
     const discartBrainBtn = document.getElementById("discartBrainBtn");
     const seeBrainBtn = document.getElementById("seeBrainBtn");
     const resetGameBtn = document.getElementById("resetGameBtn");
+    const nextGameBtn = document.getElementById("nextGameBtn");
 
     if (saveBrainBtn) saveBrainBtn.onclick = saveBrain;
     if (discartBrainBtn) discartBrainBtn.onclick = discartBrain;
     if (seeBrainBtn) seeBrainBtn.onclick = seeBrain;
     if (resetGameBtn) resetGameBtn.onclick = resetGame;
+    if (nextGameBtn) nextGameBtn.onclick = nextGame;
 }
 
 function saveBrain(): void {
@@ -237,6 +279,18 @@ function resetGame(): void {
     gm.entities.removeAll();
     buildRoad();
     buildDefaultTraffic();
-    buildAiCars();
+    buildPlayers();
     generation = 0;
+}
+
+function nextGame(): void {
+    const brain = recoverBrain();
+    if (!brain) {
+        saveBrain();
+    }
+    gm.entities.removeAll();
+    buildRoad();
+    buildDefaultTraffic();
+    buildPlayers();
+    generation++;
 }

@@ -10,8 +10,8 @@ export class Road extends Entity {
     private right: number;
     private lanesLeft: number;
     private lanesRight: number;
-    private top = -100000;
-    private bottom = 100000;
+    private top = -15000;
+    private bottom = 1000;
     private laneCount = 4;
     public borders: [Dot, Dot][] = [];
 
@@ -45,7 +45,7 @@ export class Road extends Entity {
         const img = assets.getImage("race");
         const ptrn = ctx.createPattern(img, "repeat") as CanvasPattern;
         ctx.fillStyle = ptrn;
-        ctx.fillRect(0, 100000, 700, -100000000);
+        ctx.fillRect(0, this.bottom, 700, this.top);
 
         ctx.lineWidth = 1;
         ctx.strokeStyle = "red";

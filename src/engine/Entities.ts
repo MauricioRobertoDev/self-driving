@@ -26,7 +26,6 @@ export class Entities {
             this._entities.forEach((item, i) => {
                 if (entityA === item) {
                     this._entities.splice(i, 1);
-                    console.log("deletado");
                 }
             });
         });

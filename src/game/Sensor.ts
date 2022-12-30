@@ -10,14 +10,17 @@ export class Sensor {
     public rays: [Dot, Dot][] = [];
     public readings: RayDot[] = [];
     constructor(
-        public car: PlayerCar,
         public rayCount = 5,
         public rayLength = 500,
         public raySpread = Math.PI / 2,
     ) {}
 
-    public update(roadBorders: [Dot, Dot][], traffic: TrafficCar[]): void {
-        this._castRays();
+    public update(
+        car: PlayerCar,
+        roadBorders: [Dot, Dot][],
+        traffic: TrafficCar[],
+    ): void {
+        this._castRays(car);
         this.readings = [];
         for (let i = 0; i < this.rays.length; i++) {
             const reading = this._getReading(
@@ -52,7 +55,7 @@ export class Sensor {
         }
     }
 
-    private _castRays(): void {
+    private _castRays(car: PlayerCar): void {
         this.rays = []; // se não pode isso tu vai explodir de tanto item no array
         for (let i = 0; i < this.rayCount; i++) {
             const rayAngle =
@@ -60,11 +63,11 @@ export class Sensor {
                     this.raySpread / 2,
                     -this.raySpread / 2,
                     this.rayCount == 1 ? 0.5 : i / (this.rayCount - 1),
-                ) + this.car.angle;
-            const start = { x: this.car.position.x, y: this.car.position.y };
+                ) + car.angle;
+            const start = { x: car.position.x, y: car.position.y };
             const end = {
-                x: this.car.position.x - Math.sin(rayAngle) * this.rayLength,
-                y: this.car.position.y - Math.cos(rayAngle) * this.rayLength,
+                x: car.position.x - Math.sin(rayAngle) * this.rayLength,
+                y: car.position.y - Math.cos(rayAngle) * this.rayLength,
             };
             this.rays.push([start, end]);
         }

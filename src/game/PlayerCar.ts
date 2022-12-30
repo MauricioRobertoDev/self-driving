@@ -15,8 +15,9 @@ export class PlayerCar extends AbstractCar {
 
     constructor(id: string, x: number, y: number, maxSpeed: number) {
         super(id, x, y, maxSpeed);
-        this.sensor = new Sensor(this);
+        this.sensor = new Sensor();
         this.brain = new NeuralNetwork([this.sensor.rayCount, 6, 4]);
+        this.updatePolygon();
     }
 
     public update(game: Game) {
@@ -27,12 +28,20 @@ export class PlayerCar extends AbstractCar {
 
             this.updatePosition();
             this.updatePolygon();
-            this.sensor.update(borders, traffic);
+            this.sensor.update(this, borders, traffic);
             const offsets = this.sensor.readings.map((s) =>
                 s == null ? 0 : 1 - s.offset,
             );
             NeuralNetwork.setInputs(this.brain, offsets);
             this.updateControls(game.keyboard);
+        }
+
+        if (this.damaged && !this.iamBest) {
+            game.entities.remove(this);
+        }
+
+        if (this.position.y > 0) {
+            game.entities.remove(this);
         }
     }
 

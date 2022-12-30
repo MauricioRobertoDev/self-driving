@@ -16,7 +16,7 @@ export abstract class Entity {
     /**
      * PÚBLICO
      */
-    public addChild(...children: Entity[]) {
+    public addChild(...children: Entity[]): void {
         children.forEach((child) => {
             child.parent = this;
             this.children.push(child);
