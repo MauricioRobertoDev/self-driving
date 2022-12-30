@@ -12,11 +12,15 @@ const gm = new Game(700, window.innerHeight);
 const visu = new Visualizer(300, window.innerHeight, 50, ["🠉", "🠈", "🠊", "🠋"]);
 const board = new ScoreBoard();
 
+/**
+ * CONFIGURAÇÕES DO JOGO
+ */
 const amountAI = 600;
 const mutationPercentage = 0.3; // 0 - 1
 let generation = 0;
 const playerMaxSpeed = 7;
 const trafficMaxSpeed = 3;
+// CASO ATIVO SOMENTE VOCÊ IRÁ JOGAR O JOGO
 const humanPlayer = false;
 
 gm.setup = () => {
